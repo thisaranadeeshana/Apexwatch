@@ -1,0 +1,548 @@
+#include <WiFi.h>
+#include <PubSubClient.h>
+#include <Wire.h>
+//#include <Arduino.h>
+#include <U8g2lib.h>
+#include <SPI.h>
+#include "NTPClient.h"
+#include "WiFiUdp.h"
+#include "BluetoothSerial.h"
+BluetoothSerial ESP_BT;
+int incoming;
+
+const long utcOffsetInSeconds = 19800;
+char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
+WiFiUDP ntpUDP;
+NTPClient timeClient(ntpUDP, "pool.ntp.org", utcOffsetInSeconds);
+
+U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2(U8G2_R0);
+
+int buttonPin1 = 33;//******
+int buttonPin2 = 32;//******
+int buttonPin3 = 35;//******
+int buttonPin4 = 34;//******
+int buttonPin5 = 39;//******
+
+int valuve=0;
+int un = 0;
+int at = 0;
+String Time;
+String A;
+String T;
+
+u8g2_uint_t offset;
+u8g2_uint_t width;
+const char *topicO = ".";
+const char *text2 = ".";
+//const char *text2 = "SLT  ";
+
+//const char* ssid = "SLT-4G-C74A";
+//const char* password =  "222864Y077N";
+//const char* ssid = "SLT_FIBRE";
+//const char* password =  "SLT_FIBRE";
+const char* ssid = "DIGITAL LAB";
+const char* password =  "12345678";
+const char* mqtt_server = "broker.mqtt-dashboard.com";
+WiFiClient espClient;
+PubSubClient client(espClient);
+
+byte receivedData;
+
+//int a = 26; //upper moter
+//int b = 27; //right side moter
+//int c = 14; //left side moter
+//int d = 12; //down moter
+
+int a = 12; //upper moter
+int b = 12; //right side moter
+int c = 12; //left side moter
+int d = 12; //down moter
+
+int x = 675; // Long(1)
+int y = 400; // Short(0)
+int z = 300; // Delay
+
+float presstime=0;
+int presstimebtntune = 0;
+int butten = 0;
+
+float pressLength_BTN1=0;//******
+float pressLength_BTN2=0;//******
+float pressLength_BTN3=0;//******
+float pressLength_BTN4=0;//******
+float pressLength_BTN5=0;//******
+
+int optionOne = 400;
+int optionTwo = 700; 
+
+int msg[20];
+
+int n = 0;
+int i = 0;
+int j = 0;
+
+
+void setup(void) 
+{
+  Serial.begin(115200);
+  pinMode(buttonPin1, INPUT);
+  pinMode(buttonPin2, INPUT);
+  pinMode(buttonPin3, INPUT);
+  pinMode(buttonPin4, INPUT);
+  pinMode(buttonPin5, INPUT);
+
+  pinMode(a, OUTPUT); //upper moter (a)
+  pinMode(b, OUTPUT); //right side moter (b)
+  pinMode(c, OUTPUT); //left side moter (c)
+  pinMode(d, OUTPUT); //down moter (d)
+
+  setup_wifi();
+  client.setServer(mqtt_server, 1883);
+  client.setCallback(callback);
+
+  u8g2.begin();
+  u8g2.setFontMode(0);
+  timeClient.begin();
+
+  ESP_BT.begin("APEX"); //Name of your Bluetooth Signal
+  Serial.println("Bluetooth Device is Ready to Pair");
+
+}
+
+void loop(void) 
+{
+  if (ESP_BT.available())
+  {
+//    incoming = ESP_BT.read();
+//    Serial.print("Received:");
+//    Serial.println(incoming);
+    at=1;
+//    if (incoming == 49)
+//        {
+////        ESP_BT.println("LED turned ON");
+//        }
+//
+//        
+//    if (incoming == 48)
+//        {
+////        ESP_BT.println("LED turned OFF");
+//        }     
+
+  }
+
+
+
+
+////****** 5 BTN 
+//    while (digitalRead(buttonPin5) == LOW )
+//    { 
+//      delay(100);  
+//      pressLength_BTN5 = pressLength_BTN5 + 100;
+//      //Serial.println(pressLength_BTN4); 
+//    }
+
+
+//****** 5 BTN 
+while (digitalRead(buttonPin5) == LOW )
+    { 
+//****** 5_1 BTN 
+    if (digitalRead(buttonPin1) == LOW )
+    {
+      for(i=0;i<20;i++)
+      {
+        if(msg[i] == 0)
+        {
+          i=i+25;
+        }
+        else
+        {
+          //Serial.print((char)msg[i]);
+          Serial.print(msg[i]);
+          delay(50);
+          msg[i] = 0;          
+        } 
+    }
+          //Serial.print((char)2);
+          Serial.println("2");
+          delay(50);
+          //Serial.print((char)3);
+          Serial.println("3");
+          n=0;
+          j=j+1;
+          pressLength_BTN5 = 0;
+          //Serial.println("send");
+          at=0;
+    }               
+  
+//****** 5_2 BTN
+    if (digitalRead(buttonPin2) == LOW )
+    {  
+     for(int i=0;i<50;i++)
+      {       
+      if(ESP_BT.available() > 0)
+        {
+          receivedData = ESP_BT.read();
+          //Serial.print(receivedData);
+      
+          switch (receivedData)
+        {
+
+                      case 10:
+                        digitalWrite(a, HIGH);   
+                        delay(y);
+                        digitalWrite(a, LOW);
+                        Serial.print(10);
+                        delay(z);                        
+                        break;
+                        
+                      case 11:
+                        digitalWrite(a, HIGH);   
+                        delay(x);
+                        digitalWrite(a, LOW);
+                        Serial.print(11);
+                        delay(z);    
+                        break;
+                
+                      case 20: 
+                        digitalWrite(b, HIGH);   
+                        delay(y);   
+                        digitalWrite(b, LOW);
+                        Serial.print(20);
+                        delay(z);  
+                        break;   
+                
+                     case 21:
+                        digitalWrite(b, HIGH);   
+                        delay(x);
+                        digitalWrite(b, LOW);
+                        Serial.print(21);
+                        delay(z); 
+                        break; 
+
+                     case 30: 
+                        digitalWrite(c, HIGH);   
+                        delay(y);   
+                        digitalWrite(c, LOW);
+                        Serial.print(30);
+                        delay(z);  
+                        break;   
+                
+                     case 31:
+                        digitalWrite(c, HIGH);   
+                        delay(x);
+                        digitalWrite(c, LOW);
+                        delay(z); 
+                        Serial.print(31);
+                        break; 
+                    
+                    case 40: 
+                        digitalWrite(d, HIGH);   
+                        delay(y);   
+                        digitalWrite(d, LOW);
+                        Serial.print(40);
+                        delay(z);  
+                        break;   
+                
+                     case 41:
+                        digitalWrite(d, HIGH);   
+                        delay(x);
+                        digitalWrite(d, LOW);
+                        Serial.print(41);
+                        delay(z); 
+                        break;
+                        
+                     case 2:
+                        digitalWrite(a, LOW);
+                        digitalWrite(b, LOW);
+                        digitalWrite(c, LOW);
+                        digitalWrite(d, LOW);  
+                        Serial.print(2); 
+                        delay(x);
+                        break; 
+                                   
+                      default: //If bluetooth module receives any value not listed above, both motors turn off
+                      break;
+
+        }
+      }
+    }
+      j=j+1;
+      pressLength_BTN5 = 0;
+      //Serial.println("read");
+      at=0;
+    }
+
+
+//****** 5_3 BTN 
+    if (digitalRead(buttonPin3) == LOW )
+    { 
+          n=n-1;
+          msg[n] = 0; 
+         //Serial.println("errace");
+          j=j+1;
+          pressLength_BTN5 = 0;
+    }
+      delay(100);  
+      pressLength_BTN5 = pressLength_BTN5 + 100;
+      //Serial.println(pressLength_BTN5); 
+ }
+
+
+   
+
+
+if(pressLength_BTN5>=optionOne)
+    {
+      at=1;
+    }
+
+
+if(at==0)
+    { 
+     if (digitalRead(buttonPin1) == LOW) 
+        {
+          un=0;
+        }
+    if(un==0)
+        { 
+          Time_menu();
+        }
+
+    if(un==1)
+        { 
+          u8g2.clearBuffer();
+          u8g2.setFont(u8g2_font_lubBI08_te);
+          u8g2.drawStr(0,20,topicO);
+          u8g2.sendBuffer();
+        }
+     if(un==2)
+        { 
+          u8g2.clearBuffer();
+        }
+
+     if (digitalRead(buttonPin4) == LOW && un!=3) 
+      {
+        u8g2.setFont( u8g2_font_inb16_mf);  // set the target font to calculate the pixel width
+        Serial.println(text2);
+        width = u8g2.getUTF8Width(text2);    // calculate the pixel width of the text
+        u8g2_uint_t x;
+        u8g2.firstPage();
+        do {
+            x = offset;
+            //int y = txtMsg.length()
+            do {
+                u8g2.drawUTF8(x, 25, text2);
+                x += width;
+            } while( x < u8g2.getDisplayWidth() );
+            u8g2.setCursor(0, 58);
+            u8g2.print(width);
+    
+        } while ( u8g2.nextPage() );
+    
+        offset-=1;
+        if ( (u8g2_uint_t)offset < (u8g2_uint_t)-width )    
+            offset = 0; 
+        un = 2;
+      }
+    }
+
+
+
+if(at==1)
+  {
+
+    u8g2.clearBuffer();
+    u8g2.setFont(u8g2_font_courR12_tf);
+    u8g2.drawStr(0,20,"VIB_Message");
+    u8g2.sendBuffer();
+        
+//****** 1 BTN 
+    while (digitalRead(buttonPin1) == LOW )
+    {
+      delay(100);                                                                                                                 
+      pressLength_BTN1 = pressLength_BTN1 + 100;   
+      //Serial.println(pressLength_BTN1);                  
+    }
+
+//****** 2 BTN
+    while (digitalRead(buttonPin2) == LOW )
+    {  
+      delay(100);  
+      pressLength_BTN2 = pressLength_BTN2 + 100;  
+      //Serial.println(pressLength_BTN2); 
+    }
+
+//****** 3 BTN 
+    while (digitalRead(buttonPin3) == LOW )
+    { 
+      delay(100);  
+      pressLength_BTN3 = pressLength_BTN3 + 100;
+      //Serial.println(pressLength_BTN3); 
+    }
+
+//****** 4 BTN 
+    while (digitalRead(buttonPin4) == LOW )
+    { 
+      delay(100);  
+      pressLength_BTN4 = pressLength_BTN4 + 100;
+      //Serial.println(pressLength_BTN4); 
+    }
+    
+   if (pressLength_BTN1<optionOne && pressLength_BTN1>2)
+    {    
+          msg[n] = 10;
+          Serial.println(msg[n]);
+          n++; 
+          pressLength_BTN1 = 0;
+    } 
+    else if(pressLength_BTN1>=optionOne)
+    {
+          msg[n] = 11;
+          Serial.println(msg[n]);
+          n++;
+          pressLength_BTN1 = 0;
+    }
+
+  if (pressLength_BTN2<optionOne && pressLength_BTN2>2)
+    {
+          msg[n] = 20;
+          Serial.println(msg[n]);
+          n++;
+          pressLength_BTN2 = 0;
+    }
+    else if(pressLength_BTN2>=optionOne)
+    {
+          msg[n] = 21;
+          Serial.println(msg[n]);
+          n++;
+          pressLength_BTN2 = 0;
+    }
+
+  if (pressLength_BTN3<optionOne && pressLength_BTN3>2)
+    {    
+          msg[n] = 30;
+          Serial.println(msg[n]);
+          n++;
+          pressLength_BTN3 = 0;
+
+    }
+    else if(pressLength_BTN3>=optionOne)
+    {
+          msg[n] = 31;
+          Serial.println(msg[n]);
+          n++;
+          pressLength_BTN3 = 0;
+    }
+
+  if (pressLength_BTN4<optionOne && pressLength_BTN4>2)
+    {   
+          msg[n] = 40;
+          Serial.println(msg[n]);
+          n++;
+          pressLength_BTN4 = 0;
+
+    }
+    else if(pressLength_BTN4>=optionOne)
+    {
+          msg[n] = 41;
+          Serial.println(msg[n]);
+          n++;
+          pressLength_BTN4 = 0;
+    }
+
+  if (pressLength_BTN5>2)
+     {
+          msg[n] = 2;
+          n++;
+          Serial.println("2");
+          pressLength_BTN5 = 0;
+     }
+
+  j = 0;
+}
+
+
+  if (!client.connected()) 
+    {
+      reconnect();
+    }
+      client.loop();
+
+}
+
+void setup_wifi() 
+{
+  delay(10);
+  Serial.println();
+  Serial.print("Connecting to ");
+  Serial.println(ssid);
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("");
+  Serial.println("WiFi connected");
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
+}
+void callback(char* topic, byte* payload, unsigned int length) 
+{
+  A = " ";
+  T = " ";
+  text2 = "";
+  Serial.print(topic);
+  for (int i = 0; i < length; i++) 
+  {
+   const char c = (char)payload[i];
+    A += c; 
+  }
+  A = "    "+ A +"...  ";
+  T = topic;
+  text2 = A.c_str();
+  topicO = T.c_str();
+  Serial.print(text2);
+  un = 1;
+}
+
+void reconnect() {
+  while (!client.connected()) {
+    Serial.print("Attempting MQTT connection...");
+    String clientId = "ESP8266Client-";
+    clientId += String(random(0xffff), HEX);
+    if (client.connect(clientId.c_str())) 
+    {
+      Serial.println("connected");
+      client.subscribe("[ Emergency Alert ]");
+      client.subscribe("[ Alert ]");
+      client.subscribe("[ Message ]");
+      client.subscribe("[ Notification ]");
+    } else 
+    {
+      Serial.print("failed, rc=");
+      Serial.print(client.state());
+      Serial.println(" try again in 5 seconds");
+      delay(5000);
+    }
+  }
+}
+
+void Time_menu() 
+{
+  timeClient.update();
+  String daye = daysOfTheWeek[timeClient.getDay()];
+  int houre = timeClient.getHours();
+  int mini = timeClient.getMinutes();
+  //int sec = timeClient.getSeconds();
+  String Time = daye + "  " + houre + ":" + mini;
+  int str_len = Time.length() + 1; 
+  char publishing[50];
+  Time.toCharArray(publishing, str_len);
+  //Serial.println(publishing);
+  u8g2.clearBuffer();          // clear the internal memory
+  u8g2.setFont(u8g2_font_crox3hb_tr); // choose a suitable font
+  u8g2.drawStr(0,20,publishing);  // write something to the internal memory
+  u8g2.sendBuffer();          // transfer internal memory to the display
+  //delay(1000);  
+}
